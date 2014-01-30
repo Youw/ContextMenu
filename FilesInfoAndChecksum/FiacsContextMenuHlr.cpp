@@ -127,9 +127,10 @@ IFACEMETHODIMP FiacsContextMenuHlr::Initialize(
 				//it can be optimized
 				// Store the path of the files.
                 if (0 != DragQueryFile(hDrop, i, m_szSelectedFile, 
-                    ARRAYSIZE(m_szSelectedFile)))
+					ARRAYSIZE(m_szSelectedFile)))
                 {
-					m_SelectedFiles.push_back(m_szSelectedFile);
+					if (!PathIsDirectory(m_szSelectedFile))
+						m_SelectedFiles.push_back(m_szSelectedFile);
 				}
 				else { 
 					hr = E_FAIL;
