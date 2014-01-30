@@ -1,0 +1,6 @@
+*.sdf
+*.opensdf
+x64/
+Debug/
+FilesInfoAndChecksum/x64/
+FilesInfoAndChecksum/Debug/
