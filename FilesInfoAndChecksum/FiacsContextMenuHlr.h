@@ -38,6 +38,9 @@ private:
     // The list of the names of selected files.
     std::vector<std::wstring> m_SelectedFiles;
 
+	// The list of the names of selected directories.
+	std::vector<std::wstring> m_SelectedDirectories;
+
     // The method that handles the "display" verb.
     void OnMakeLogOfChecksums(HWND hWnd);
 

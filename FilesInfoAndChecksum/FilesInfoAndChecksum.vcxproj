@@ -157,8 +157,10 @@
     <None Include="GlobalExportFunctions.def" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CheckSumCalculator.h" />
     <ClInclude Include="ClassFactory.h" />
     <ClInclude Include="FiacsContextMenuHlr.h" />
+    <ClInclude Include="JobsExecuting.h" />
     <ClInclude Include="Reg.h" />
     <ClInclude Include="Settings.h" />
   </ItemGroup>

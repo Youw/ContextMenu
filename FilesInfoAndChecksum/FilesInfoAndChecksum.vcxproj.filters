@@ -42,5 +42,11 @@
     <ClInclude Include="FiacsContextMenuHlr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CheckSumCalculator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="JobsExecuting.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

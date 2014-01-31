@@ -1,5 +1,5 @@
-#ifndef Settings_h
-#define Settings_h
+#ifndef SETTINGS_H
+#define SETTINGS_H
 
 #define MenuText_CalcChecksum "&Make log of file(s) info"
 #define Verb_CalcChecksum "makeloginfochecksum"
@@ -13,4 +13,4 @@
 //to convert some X , where X - '#define x "some string"' to L"some string"
 #define MAKEWIDE(x) CONCAT(L,x)
 
-#endif //Settings_h
+#endif //SETTINGS_H

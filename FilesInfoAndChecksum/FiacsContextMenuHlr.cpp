@@ -12,6 +12,7 @@ The code creating a Shell context menu handler with C++.
 
 #pragma comment(lib, "shlwapi.lib")
 
+#include "JobsExecuting.h"
 
 //extern HINSTANCE g_hInst;
 extern long g_cDllRef;
@@ -117,20 +118,23 @@ IFACEMETHODIMP FiacsContextMenuHlr::Initialize(
         HDROP hDrop = static_cast<HDROP>(GlobalLock(stm.hGlobal));
         if (hDrop != NULL)
         {
-			wchar_t m_szSelectedFile[MAX_PATH];
+			wchar_t m_szSelectedPath[MAX_PATH];
+			const int a = 23;
+			int b = a;
             // Determine how many files are involved in this operation. 
             UINT nFiles = DragQueryFile(hDrop, 0xFFFFFFFF, NULL, 0);
 			for (unsigned i = 0; i < nFiles; i++)
             {
 				hr = S_OK;
 
-				//it can be optimized
-				// Store the path of the files.
-                if (0 != DragQueryFile(hDrop, i, m_szSelectedFile, 
-					ARRAYSIZE(m_szSelectedFile)))
+				// Store the path of the files and folders.
+                if (0 != DragQueryFile(hDrop, i, m_szSelectedPath, 
+					ARRAYSIZE(m_szSelectedPath)))
                 {
-					if (!PathIsDirectory(m_szSelectedFile))
-						m_SelectedFiles.push_back(m_szSelectedFile);
+					if (!PathIsDirectory(m_szSelectedPath))
+						m_SelectedFiles.push_back(m_szSelectedPath);
+					else
+						m_SelectedDirectories.push_back(m_szSelectedPath);
 				}
 				else { 
 					hr = E_FAIL;
