@@ -8,4 +8,5 @@ CheckSumCalculator::CheckSumCalculator()
 
 CheckSumCalculator::~CheckSumCalculator()
 {
+	//
 }
