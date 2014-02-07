@@ -8,7 +8,8 @@ DLL.
 #include <Guiddef.h>
 #include "ClassFactory.h"           // For the class factory
 #include "Reg.h"
-#include "Settings.h"
+#include "../Settings.h"
+
 
 // GUID for our COM object
 // {F9A97231-462A-4DF4-8594-E5761DB8565E}
@@ -95,7 +96,8 @@ STDAPI DllCanUnloadNow(void)
 // 
 STDAPI DllRegisterServer(void)
 {
-    HRESULT hr;
+	using namespace Registry;
+	HRESULT hr;
 
     wchar_t szModule[MAX_PATH];
     if (GetModuleFileName(g_hInst, szModule, ARRAYSIZE(szModule)) == 0)
@@ -127,7 +129,9 @@ STDAPI DllRegisterServer(void)
 // 
 STDAPI DllUnregisterServer(void)
 {
-    HRESULT hr = S_OK;
+	using namespace Registry;
+	
+	HRESULT hr = S_OK;
 
     wchar_t szModule[MAX_PATH];
     if (GetModuleFileName(g_hInst, szModule, ARRAYSIZE(szModule)) == 0)

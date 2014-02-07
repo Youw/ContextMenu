@@ -1,9 +1,9 @@
 /****************************** Module Header ******************************\
-The file implements the class factory for the FiacsContextMenuHlr COM class. 
+The file implements the class factory for the ContextMenuHlr COM class. 
 \***************************************************************************/
 
 #include "ClassFactory.h"
-#include "fiacsContextMenuHlr.h"
+#include "ContextMenuHlr.h"
 #include <new>
 #include <Shlwapi.h>
 #pragma comment(lib, "shlwapi.lib")
@@ -64,10 +64,10 @@ IFACEMETHODIMP ClassFactory::CreateInstance(IUnknown *pUnkOuter, REFIID riid, vo
     // pUnkOuter is used for aggregation. We do not support it here
     if (pUnkOuter == NULL)
     {
-        hr = E_OUTOFMEMORY;
-
-        // Create the COM component.
-        FiacsContextMenuHlr *MenuHandler = new (std::nothrow) FiacsContextMenuHlr();
+		using FileInfoAndChecksum::ContextMenuHlr;
+		hr = E_OUTOFMEMORY;
+		// Create the COM component.
+        ContextMenuHlr *MenuHandler = new (std::nothrow) ContextMenuHlr();
 		if (MenuHandler)
         {
             // Query the specified interface.

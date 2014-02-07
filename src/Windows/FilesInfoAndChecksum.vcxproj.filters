@@ -9,11 +9,18 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="GlobalExportFunctions.def">
-      <Filter>Source Files</Filter>
-    </None>
+    <Filter Include="CrossPlatform">
+      <UniqueIdentifier>{aa75e494-de2e-4295-92b4-ac85a2456518}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CrossPlatform\Header Files">
+      <UniqueIdentifier>{86827088-a51b-4249-91ee-a13c7057a05a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CrossPlatform\Source Files">
+      <UniqueIdentifier>{b4848a1c-6b83-4b64-81d8-6fd63f884c08}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Other">
+      <UniqueIdentifier>{67a5b2fe-955d-4448-ad2a-1a2723ee868a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -25,8 +32,11 @@
     <ClCompile Include="Reg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FiacsContextMenuHlr.cpp">
+    <ClCompile Include="ContextMenuHlr.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CheckSumCalculator.cpp">
+      <Filter>CrossPlatform\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -36,17 +46,22 @@
     <ClInclude Include="Reg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Settings.h">
+    <ClInclude Include="ContextMenuHlr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FiacsContextMenuHlr.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\CheckSumCalculator.h">
+      <Filter>CrossPlatform\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CheckSumCalculator.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\JobsExecuting.h">
+      <Filter>CrossPlatform\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="JobsExecuting.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\Settings.h">
+      <Filter>CrossPlatform\Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="GlobalExportFunctions.def">
+      <Filter>Other</Filter>
+    </None>
   </ItemGroup>
 </Project>

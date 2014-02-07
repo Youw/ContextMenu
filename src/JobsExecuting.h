@@ -38,16 +38,16 @@ namespace jobs{
 	template<typename RetType>
 	//performing single gob execution in paralel thread
 	//
-	class JobExecutor {
+	class JobExecuter {
 		//just creating working thread
-		JobExecutor();
+		JobExecuter();
 
 		//creating working thread and start executing newJob
-		JobExecutor(const Job<RetType>& newJob);
+		JobExecuter(const Job<RetType>& newJob);
 
 		//waiting for job to be done
 		//snd closing working thread
-		~JobExecutor();
+		~JobExecuter();
 
 		//method is waiting until previous job will be done
 		//and than start execute newJob (not waiting for in to be done)
@@ -109,12 +109,11 @@ namespace jobs{
 		RetType operator[] (const size_t& jobNum) const;
 
 	private:
-		Jobs _CurrentJobs;
-		std::vector<JobExecutor> _WorkingThreads;
+		Jobs<RetType> _CurrentJobs;
+		std::vector<JobExecuter<RetType>> _WorkingThreads;
 	};//class JobsExecuter
 
 };//namespace jobs
 
-jobs::JobsExecuter<int> a;
 
 #endif //JOBEXECUTER_H
