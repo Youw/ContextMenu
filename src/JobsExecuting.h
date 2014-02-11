@@ -67,8 +67,39 @@ namespace jobs{
 	//Jobs - list of simple jobs
 	template<typename RetType>
 	struct Jobs{
-		std::vector<Job<RetType>> Tasks;//list of jobs to be done
-		std::function<void(void)> TasksEndCallBack;//will be called after all jobs is done
+		std::vector< Job<RetType> > Tasks;//list of jobs to be done
+		std::function<void(void)> TasksEndCallBack;//will be called after all jobs are done
+		
+		Jobs() {};
+
+		Jobs(const std::vector< Job<RetType> > &_Tasks, const std::function<void(const RetType&)>& _TasksEndCallBack = nullptr) = delete;
+		
+		Job(
+			std::vector< Job<RetType> > &_Tasks, 
+			std::function<void(const RetType&)>& _TasksEndCallBack = nullptr)
+				Tasks(std::move(_Tasks)), 
+				TasksEndCallBack(std::move(_TasksEndCallBack)) {};
+		
+		//can not be copied
+		Job(const Job&) = delete;
+
+		//move constructor
+		Job(Job&& _J) : 
+			Tasks(std::move(_J.Tasks)),
+			TasksEndCallBack(std::move(_J.TasksEndCallBack)),
+			JobsAreDone(std::move(_J.JobsAreDone)) {};
+		
+		//can not be copied
+		Job& operator=(const Job&) = delete;
+		
+		//move assignment operator
+		Job& operator=(Job&& _J){
+			Tassk = std::move(_J.Tasks);
+			TasskEndCallBack = std::move(_J.TasksEndCallBack);
+			JobsAreDone(_J.JobsAreDone);
+			return *this;
+		}
+		
 	private:
 		friend class JobsExecuter<RetType>;
 		//only JobsExecuter will operate this field
@@ -150,7 +181,7 @@ namespace jobs{
 
 	private:
 		Jobs<RetType> _CurrentJobs;
-		std::vector<JobExecuter<RetType>> _WorkingThreads;
+		std::vector< JobExecuter<RetType> > _WorkingThreads;
 	};//class JobsExecuter
 
 };//namespace jobs
