@@ -14,7 +14,9 @@
 #define HandlerFullName "FilesInfoAndChecksum.ContextMenuHlr_x32"
 #endif
 
-#define RUN_ASYNC false
+#define LogFileName "SelectedFilesInfo.log"
+
+#define RUN_ASYNC true
 
 //textual concationation
 #define CONCAT(x, y) x##y

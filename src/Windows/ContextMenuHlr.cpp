@@ -7,6 +7,7 @@ The code creating a Shell context menu handler with C++.
 #include <strsafe.h>
 #include <Shlwapi.h>
 #include <WinUser.h>
+#include <algorithm>
 
 #include "../MainLogic.h"
 #include "../Settings.h"
@@ -54,9 +55,18 @@ namespace FileInfoAndChecksum {
 	}
 
 
+	//obvious from the declaration
+	//needed to make COM specific code independent from 'boost'
+	static std::wstring DirectoryFromPath(const std::wstring& pathname)
+	{
+		return std::wstring(pathname.begin(),
+			std::find_if(pathname.rbegin(), pathname.rend(),
+			[](wchar_t ch){return ch == '\\' || ch == '/'; }).base());
+	}
+
 	void ContextMenuHlr::OnMakeLogOfChecksums(HWND hWnd)
 	{
-		WriteInfoToLog(m_SelectedFiles, m_FirstFile, RUN_ASYNC);
+		WriteInfoToLog(m_SelectedFiles, DirectoryFromPath(m_FirstFile) + MAKEWIDE(LogFileName), RUN_ASYNC);
 	}
 
 
@@ -124,14 +134,14 @@ namespace FileInfoAndChecksum {
 				const int a = 23;
 				int b = a;
 				// Determine how many files are involved in this operation. 
-				UINT nFiles = DragQueryFile(hDrop, 0xFFFFFFFF, NULL, 0);
+				UINT nFiles = DragQueryFileW(hDrop, 0xFFFFFFFF, NULL, 0);
 				hr = S_OK;
 				for (unsigned i = 0; i < nFiles; i++)
 				{
 					// Store the path of the files and folders.
-					if (0 != DragQueryFile(hDrop, i, m_szSelectedPath, MAX_PATH))
+					if (0 != DragQueryFileW(hDrop, i, m_szSelectedPath, MAX_PATH))
 					{
-						if (!PathIsDirectory(m_szSelectedPath)){
+						if (!PathIsDirectoryW(m_szSelectedPath)){
 							m_SelectedFiles.insert(m_szSelectedPath);
 							if (m_FirstFile.empty()) {
 								m_FirstFile = m_szSelectedPath;

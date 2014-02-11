@@ -8,6 +8,7 @@
 
 namespace jobs{
 
+	//declaration for Log and Lobs
 	template<typename RetType>
 	class JobsExecuter;
 
@@ -21,7 +22,7 @@ namespace jobs{
 		//TaskEndCallBack - will be called, after task is done, with parameter returned by Task
 		std::function<void(const RetType&)> TaskEndCallBack;
 
-		Job() {};
+		Job() : JobIsDone(false) {};
 
 		Job(
 			const std::function<RetType(void)> &_Task, 
@@ -76,7 +77,7 @@ namespace jobs{
 
 	template<typename RetType>
 	//performing single gob execution in paralel thread
-	//
+	//thread's lifetime is the same as class JobExecuter's object lifetime
 	class JobExecuter {
 		//just creating working thread
 		JobExecuter();
@@ -85,11 +86,11 @@ namespace jobs{
 		JobExecuter(const Job<RetType>& newJob);
 
 		//waiting for job to be done
-		//snd closing working thread
+		//and closing working thread
 		~JobExecuter();
 
-		//method is waiting until previous job will be done
-		//and than start execute newJob (not waiting for in to be done)
+		//waiting until previous job will be done
+		//and than start execute newJob (not waiting for it to be done)
 		void AddJob(const Jobs<RetType>& newJobs);
 
 		//true if the job not executed yet
@@ -140,7 +141,7 @@ namespace jobs{
 		//return current jobs count
 		size_t JobsCount() const;
 
-		//if job # jobNum is not done jet, waiting until it be done 
+		//if job # jobNum is not done jet, waiting until it be done
 		//than return result of the job 
 		RetType JobResult(const size_t& jobNum) const;
 
