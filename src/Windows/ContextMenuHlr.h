@@ -6,7 +6,7 @@ The code creating a Shell context menu handler with C++.
 
 #include <windows.h>
 #include <shlobj.h>     // For IShellExtInit and IContextMenu
-#include <vector>
+#include <set>
 #include <string>
 
 namespace FileInfoAndChecksum {
@@ -37,11 +37,13 @@ namespace FileInfoAndChecksum {
 		// Reference count of component.
 		long m_cRef;
 
+		std::wstring m_FirstFile;
+
 		// The list of the names of selected files.
-		std::vector<std::wstring> m_SelectedFiles;
+		std::set<std::wstring> m_SelectedFiles;
 
 		// The list of the names of selected directories.
-		std::vector<std::wstring> m_SelectedDirectories;
+		std::set<std::wstring> m_SelectedDirectories;
 
 		// The method that handles the "display" verb.
 		void OnMakeLogOfChecksums(HWND hWnd);
@@ -56,4 +58,4 @@ namespace FileInfoAndChecksum {
 		PCWSTR m_pwszVerbHelpText;
 	};
 
-}
+} //namespace FileInfoAndChecksum

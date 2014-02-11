@@ -8,13 +8,16 @@ The code creating a Shell context menu handler with C++.
 #include <Shlwapi.h>
 #include <WinUser.h>
 
+#include "../MainLogic.h"
 #include "../Settings.h"
+
 
 #pragma comment(lib, "shlwapi.lib")
 
-#include "../JobsExecuting.h"
-
+//not needed any more
 //extern HINSTANCE g_hInst;
+
+//from dllmain.cpp
 extern long g_cDllRef;
 
 
@@ -53,11 +56,7 @@ namespace FileInfoAndChecksum {
 
 	void ContextMenuHlr::OnMakeLogOfChecksums(HWND hWnd)
 	{
-		std::wstring szMessage = L"The selected file(s) is:\r\n\r\n";
-		for (auto filename : m_SelectedFiles) {
-			szMessage += filename + L"\r\n";
-		}
-		MessageBox(hWnd, szMessage.c_str(), L"Info", MB_OK);
+		WriteInfoToLog(m_SelectedFiles, m_FirstFile, RUN_ASYNC);
 	}
 
 
@@ -126,25 +125,30 @@ namespace FileInfoAndChecksum {
 				int b = a;
 				// Determine how many files are involved in this operation. 
 				UINT nFiles = DragQueryFile(hDrop, 0xFFFFFFFF, NULL, 0);
+				hr = S_OK;
 				for (unsigned i = 0; i < nFiles; i++)
 				{
-					hr = S_OK;
-
 					// Store the path of the files and folders.
-					if (0 != DragQueryFile(hDrop, i, m_szSelectedPath,
-						ARRAYSIZE(m_szSelectedPath)))
+					if (0 != DragQueryFile(hDrop, i, m_szSelectedPath, MAX_PATH))
 					{
-						if (!PathIsDirectory(m_szSelectedPath))
-							m_SelectedFiles.push_back(m_szSelectedPath);
+						if (!PathIsDirectory(m_szSelectedPath)){
+							m_SelectedFiles.insert(m_szSelectedPath);
+							if (m_FirstFile.empty()) {
+								m_FirstFile = m_szSelectedPath;
+							}
+						}
 						else
-							m_SelectedDirectories.push_back(m_szSelectedPath);
+							m_SelectedDirectories.insert(m_szSelectedPath);
+
 					}
 					else {
 						hr = E_FAIL;
 						break;
 					}
 				}
-
+				if (m_SelectedFiles.empty()) {
+					hr = E_INVALIDARG;
+				}
 				GlobalUnlock(stm.hGlobal);
 			}
 
@@ -180,7 +184,7 @@ namespace FileInfoAndChecksum {
 		}
 
 		// Use either InsertMenu or InsertMenuItem to add menu items.
-		// Learn how to add sub-menu from:
+		// Examples for sub-menus:
 		// http://www.codeproject.com/KB/shell/ctxextsubmenu.aspx
 
 		MENUITEMINFO mii = { sizeof(mii) };
@@ -363,4 +367,4 @@ namespace FileInfoAndChecksum {
 
 #pragma endregion
 
-}
+} //namespace FileInfoAndChecksum

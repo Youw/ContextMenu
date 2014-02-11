@@ -2,18 +2,18 @@
 The file implements the reusable helper functions to register and unregister 
 in-process COM components and shell context menu handlers in the registry.
 
-RegisterInprocServer - register the in-process component in the registry.
-UnregisterInprocServer - unregister the in-process component in the registry.
-RegisterShellExtContextMenuHandler - register the context menu handler.
-UnregisterShellExtContextMenuHandler - unregister the context menu handler.
+registry::RegisterInprocServer - register the in-process component in the registry.
+registry::UnregisterInprocServer - unregister the in-process component in the registry.
+registry::RegisterShellExtContextMenuHandler - register the context menu handler.
+registry::UnregisterShellExtContextMenuHandler - unregister the context menu handler.
 \***************************************************************************/
 
 #include "Reg.h"
 #include <strsafe.h>
 
-namespace Registry {
+namespace registry {
 
-#pragma region Registry Helper Functions
+#pragma region registry Helper Functions
 
 	//
 	//   FUNCTION: SetHKCRRegistryKeyAndValue

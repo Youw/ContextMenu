@@ -11,10 +11,17 @@ DLL.
 #include "../Settings.h"
 
 
+#if UINTPTR_MAX==UINT64_MAX
 // GUID for our COM object
 // {F9A97231-462A-4DF4-8594-E5761DB8565E}
 static const GUID CLSID_FilesInfoAndChecksum =
-{ 0xf9a97231, 0x462a, 0x4df4, { 0x85, 0x94, 0xe5, 0x76, 0x1d, 0xb8, 0x56, 0x5e } };
+{ 0xf9a97231, 0x462a, 0x4df4, { 0x64, 0x94, 0xe5, 0x76, 0x1d, 0xb8, 0x56, 0x5e } };
+#else
+// GUID for our COM object
+// {F9A97231-462A-4DF4-8594-E5761DB8565E}
+static const GUID CLSID_FilesInfoAndChecksum =
+{ 0xf9a97231, 0x462a, 0x4df4, { 0x32, 0x94, 0xe5, 0x76, 0x1d, 0xb8, 0x56, 0x5e } };
+#endif
 
 
 static HINSTANCE   g_hInst     = NULL;
@@ -96,7 +103,7 @@ STDAPI DllCanUnloadNow(void)
 // 
 STDAPI DllRegisterServer(void)
 {
-	using namespace Registry;
+	using namespace registry;
 	HRESULT hr;
 
     wchar_t szModule[MAX_PATH];
@@ -117,6 +124,11 @@ STDAPI DllRegisterServer(void)
         hr = RegisterShellExtContextMenuHandler(L"*", 
 			CLSID_FilesInfoAndChecksum,
 			MAKEWIDE(HandlerFullName));
+		if (SUCCEEDED(hr)) {
+			hr = RegisterShellExtContextMenuHandler(L"Directory",
+				CLSID_FilesInfoAndChecksum,
+				MAKEWIDE(HandlerFullName));
+		}
     }
 
     return hr;
@@ -129,7 +141,7 @@ STDAPI DllRegisterServer(void)
 // 
 STDAPI DllUnregisterServer(void)
 {
-	using namespace Registry;
+	using namespace registry;
 	
 	HRESULT hr = S_OK;
 
@@ -147,6 +159,10 @@ STDAPI DllUnregisterServer(void)
         // Unregister the context menu handler.
         hr = UnregisterShellExtContextMenuHandler(L"*", 
 			CLSID_FilesInfoAndChecksum);
+		if (SUCCEEDED(hr)) {
+			hr = UnregisterShellExtContextMenuHandler(L"Directory",
+				CLSID_FilesInfoAndChecksum);
+		}
     }
 
     return hr;

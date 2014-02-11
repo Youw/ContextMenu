@@ -1,12 +1,20 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
+#include <cstdint>
+
 #define MenuText_CalcChecksum "&Make log of file(s) info"
 #define Verb_CalcChecksum "makeloginfochecksum"
 #define VerbCanonicalName_CalcChecksum "MakeLogInfoChecksum"
 #define VerbHelpText_CalcChecksum "Save checksums of files to log"
 
-#define HandlerFullName "FilesInfoAndChecksum.FiacsContextMenuHlr"
+#if UINTPTR_MAX==UINT64_MAX
+#define HandlerFullName "FilesInfoAndChecksum.ContextMenuHlr_x64"
+#else
+#define HandlerFullName "FilesInfoAndChecksum.ContextMenuHlr_x32"
+#endif
+
+#define RUN_ASYNC false
 
 //textual concationation
 #define CONCAT(x, y) x##y

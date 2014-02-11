@@ -17,11 +17,49 @@ namespace jobs{
 		//Task - is a simple function or class or struct with 'operator()' overloaded
 		//Task() return type must be non void
 		std::function<RetType(void)> Task;
+
 		//TaskEndCallBack - will be called, after task is done, with parameter returned by Task
 		std::function<void(const RetType&)> TaskEndCallBack;
+
+		Job() {};
+
+		Job(
+			const std::function<RetType(void)> &_Task, 
+			const std::function<void(const RetType&)>& _TaskEndCallBack = nullptr) : 
+				Task(_Task), 
+				TaskEndCallBack(_TaskEndCallBack), 
+				JobIsDone(false) {};
+		
+		Job(
+			std::function<RetType(void)> &&_Task,
+			std::function<void(const RetType&)>&& _TaskEndCallBack = nullptr) :
+				Task(std::move(_Task)), 
+				TaskEndCallBack(std::move(_TaskEndCallBack)), 
+				JobIsDone(false) {};
+		
+		//can not be copied
+		Job(const Job&) = delete;
+
+		//move constructor
+		Job(Job&& _J) : 
+			Task(std::move(_J.Task)),
+			TaskEndCallBack(std::move(_J.TaskEndCallBack)),
+			JobIsDone(_J.JobIsDone) {};
+		
+		//can not be copied
+		Job& operator=(const Job&) = delete;
+		
+		//move assignment operator
+		Job& operator=(Job&& _J){
+			Task = std::move(_J.Task);
+			TaskEndCallBack = std::move(_J.TaskEndCallBack);
+			JobIsDone(_J.JobIsDone);
+			return *this;
+		}
 	private:
-		bool JobIsDone;
 		friend class JobsExecuter<RetType>;
+		//only JobsExecuter will operate this fields
+		bool JobIsDone;
 		RetType result;
 	};
 
@@ -31,8 +69,9 @@ namespace jobs{
 		std::vector<Job<RetType>> Tasks;//list of jobs to be done
 		std::function<void(void)> TasksEndCallBack;//will be called after all jobs is done
 	private:
-		std::vector<bool> JobsAreDone;
 		friend class JobsExecuter<RetType>;
+		//only JobsExecuter will operate this field
+		std::vector<bool> JobsAreDone;
 	};
 
 	template<typename RetType>
