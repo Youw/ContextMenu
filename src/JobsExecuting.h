@@ -4,6 +4,7 @@
 #include <vector>
 #include <mutex>
 #include <thread>
+#include <condition_variable>
 #include <functional>
 
 namespace jobs{
@@ -17,93 +18,98 @@ namespace jobs{
 	struct Job {
 		//Task - is a simple function or class or struct with 'operator()' overloaded
 		//Task() return type must be non void
-		std::function<RetType(void)> Task;
+		std::function<RetType(void)> _Task;
 
 		//TaskEndCallBack - will be called, after task is done, with parameter returned by Task
-		std::function<void(const RetType&)> TaskEndCallBack;
+		std::function<void(const RetType&)> _TaskEndCallBack;
 
 		Job() : JobIsDone(false) {};
 
 		Job(
-			const std::function<RetType(void)> &_Task, 
-			const std::function<void(const RetType&)>& _TaskEndCallBack = nullptr) : 
-				Task(_Task), 
-				TaskEndCallBack(_TaskEndCallBack), 
-				JobIsDone(false) {};
+			const std::function<RetType(void)> &Task, 
+			const std::function<void(const RetType&)>& TaskEndCallBack = nullptr) : 
+				_Task(Task), 
+				_TaskEndCallBack(TaskEndCallBack), 
+				_JobIsDone(false) {};
 		
 		Job(
-			std::function<RetType(void)> &&_Task,
-			std::function<void(const RetType&)>&& _TaskEndCallBack = nullptr) :
-				Task(std::move(_Task)), 
-				TaskEndCallBack(std::move(_TaskEndCallBack)), 
-				JobIsDone(false) {};
+			std::function<RetType(void)> && Task,
+			std::function<void(const RetType&)>&& TaskEndCallBack = nullptr) :
+				_Task(std::move(Task)), 
+				_TaskEndCallBack(std::move(TaskEndCallBack)), 
+				_JobIsDone(false) {};
 		
 		//can not be copied
 		Job(const Job&) = delete;
 
 		//move constructor
-		Job(Job&& _J) : 
-			Task(std::move(_J.Task)),
-			TaskEndCallBack(std::move(_J.TaskEndCallBack)),
-			JobIsDone(_J.JobIsDone) {};
+		Job(Job&& J) : 
+			_Task(std::move(J._Task)),
+			_TaskEndCallBack(std::move(J._TaskEndCallBack)),
+			_JobIsDone(J._JobIsDone) {};
 		
 		//can not be copied
 		Job& operator=(const Job&) = delete;
 		
 		//move assignment operator
-		Job& operator=(Job&& _J){
-			Task = std::move(_J.Task);
-			TaskEndCallBack = std::move(_J.TaskEndCallBack);
-			JobIsDone(_J.JobIsDone);
+		Job& operator=(Job&& J){
+			_Task = std::move(J._Task);
+			_TaskEndCallBack = std::move(J._TaskEndCallBack);
+			_JobIsDone(J._JobIsDone);
 			return *this;
 		}
 	private:
 		friend class JobsExecuter<RetType>;
 		//only JobsExecuter will operate this fields
-		bool JobIsDone;
-		RetType result;
+		bool _JobIsDone;
+		RetType _result;
 	};
 
 	//Jobs - list of simple jobs
 	template<typename RetType>
 	struct Jobs{
-		std::vector< Job<RetType> > Tasks;//list of jobs to be done
-		std::function<void(void)> TasksEndCallBack;//will be called after all jobs are done
+		std::vector< Job<RetType> > _Tasks;//list of jobs to be done
+		std::function<void(void)> _TasksEndCallBack;//will be called after all jobs are done
 		
 		Jobs() {};
 
-		Jobs(const std::vector< Job<RetType> > &_Tasks, const std::function<void(const RetType&)>& _TasksEndCallBack = nullptr) = delete;
+		//can not be copied
+		Jobs(const std::vector< Job<RetType> > &Tasks, const std::function<void(const RetType&)>& TasksEndCallBack = nullptr) = delete;
 		
-		Job(
-			std::vector< Job<RetType> > &_Tasks, 
-			std::function<void(const RetType&)>& _TasksEndCallBack = nullptr)
-				Tasks(std::move(_Tasks)), 
-				TasksEndCallBack(std::move(_TasksEndCallBack)) {};
+		Jobs(
+			std::vector< Job<RetType> >&& Tasks, 
+			std::function<void(const RetType&)>&& TasksEndCallBack = nullptr)
+				_Tasks(std::move(Tasks)), 
+				_TasksEndCallBack(std::move(TasksEndCallBack)) {};
 		
 		//can not be copied
-		Job(const Job&) = delete;
+		Jobs(const Jobs&) = delete;
 
 		//move constructor
-		Job(Job&& _J) : 
-			Tasks(std::move(_J.Tasks)),
-			TasksEndCallBack(std::move(_J.TasksEndCallBack)),
-			JobsAreDone(std::move(_J.JobsAreDone)) {};
+		Jobs(Jobs&& J) : 
+			_Tasks(std::move(J._Tasks)),
+			_TasksEndCallBack(std::move(J._TasksEndCallBack)),
+			_JobsAreDone(std::move(J._JobsAreDone)) {};
 		
 		//can not be copied
-		Job& operator=(const Job&) = delete;
+		Jobs& operator=(const Jobs&) = delete;
 		
 		//move assignment operator
-		Job& operator=(Job&& _J){
-			Tassk = std::move(_J.Tasks);
-			TasskEndCallBack = std::move(_J.TasksEndCallBack);
-			JobsAreDone(_J.JobsAreDone);
+		Jobs& operator=(Jobs&& J){
+			_Tassk = std::move(J._Tasks);
+			_TasskEndCallBack = std::move(J._TasksEndCallBack);
+			_JobsAreDone(J._JobsAreDone);
 			return *this;
 		}
 		
 	private:
 		friend class JobsExecuter<RetType>;
 		//only JobsExecuter will operate this field
-		std::vector<bool> JobsAreDone;
+		
+		//std::vector<bool> JobsAreDone;
+		//there is some problems with vector<bool> in STL
+		std::vector<char> JobsAreDone;
+		
 	};
 
 	template<typename RetType>
@@ -113,8 +119,20 @@ namespace jobs{
 		//just creating working thread
 		JobExecuter();
 
+		//can not be copied
+		JobExecuter(const JobExecuter&) = delete;
+
+		//move constructor
+		JobExecuter(JobExecuter&&);
+
+		//can not be copied
+		JobExecuter& operator=(const JobExecuter&) = delete;
+
+		//move assigment operator
+		JobExecuter& operator=(JobExecuter&&);
+
 		//creating working thread and start executing newJob
-		JobExecuter(const Job<RetType>& newJob);
+		JobExecuter(Job<RetType>&& newJob);
 
 		//waiting for job to be done
 		//and closing working thread
@@ -122,7 +140,7 @@ namespace jobs{
 
 		//waiting until previous job will be done
 		//and than start execute newJob (not waiting for it to be done)
-		void AddJob(const Jobs<RetType>& newJobs);
+		void AddJob(Jobs<RetType>&& newJobs);
 
 		//true if the job not executed yet
 		bool JobIsExecuting() const;
@@ -137,7 +155,13 @@ namespace jobs{
 		//than return result of the job 
 		RetType JobResult() const;
 	private:
+		// the function running in other thread
+		static void _ThreadProcessor(JobExecuter& _this);
 
+		std::mutex mtx;
+		Job<RetType> _CurrentJob;
+		std::thread _WorkingThread;
+		std::condition_variable cv;
 	};
 
 	template<typename RetType>
