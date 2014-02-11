@@ -2,6 +2,8 @@
 *.opensdf
 x64/
 Debug/
+bin/
+binWin32/
 FilesInfoAndChecksum/x64/
 FilesInfoAndChecksum/Debug/
 *.suo
