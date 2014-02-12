@@ -2,6 +2,7 @@
 *.opensdf
 x64/
 Debug/
+Release/
 bin/
 binWin32/
 FilesInfoAndChecksum/x64/
