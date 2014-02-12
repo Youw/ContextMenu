@@ -28,6 +28,8 @@ public:
 	void SetFileName(const std::wstring& FileName);
 	void SetFileName(std::wstring&& FileName);
 
+	const std::wstring& GetFileName() const;
+
 	//do not needed now
 //	~CheckSumCalculator();
 

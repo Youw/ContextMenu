@@ -32,3 +32,7 @@ void CheckSumCalculator::SetFileName(const std::wstring& FileName) {
 void CheckSumCalculator::SetFileName(std::wstring&& FileName) {
 	m_FileName = FileName;
 }
+
+const std::wstring& CheckSumCalculator::GetFileName() const {
+	return m_FileName;
+}

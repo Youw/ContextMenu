@@ -28,7 +28,14 @@ static bool m_WriteInfoToLog(std::set<std::wstring> &Files, const std::wstring &
 		}
 	}
 
+	jobs::JobsExecuter<CHECKSUM_DWORD> myJobs(jobsTodo);
 
+	size_t jobsCount = myJobs.JobsCount();
+
+	for (size_t i = 0; i < jobsCount; i++) {
+		std::wofstream LogFile(LogFileName, std::ios::app);
+		LogFile << "The checksum of \"" << myJobs.GetJob(i).Task.target<CheckSumCalculator>()->GetFileName() << "\" = " << myJobs[i] << endl;
+	}
 
 	//end of the log
 	{
