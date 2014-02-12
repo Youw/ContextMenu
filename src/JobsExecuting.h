@@ -10,9 +10,12 @@
 
 namespace jobs{
 
-	//declaration for Log and Lobs
+	//declaration for Job and Jobs
+	template<typename RetType>
+	class JobExecuter;
 	template<typename RetType>
 	class JobsExecuter;
+
 
 	template<typename RetType>
 	//the simple job
@@ -24,45 +27,55 @@ namespace jobs{
 		//TaskEndCallBack - will be called, after task is done, with parameter returned by Task
 		std::function<void(const RetType&)> TaskEndCallBack;
 
-		Job() : _JobIsDone(false) {};
+		Job() {
+			_JobIsDone = false;
+			_JobFaild = false;
+		};
 
 		Job(
-			const std::function<RetType(void)> &_Task, 
-			const std::function<void(const RetType&)>& _TaskEndCallBack = nullptr) : 
-				Task(_Task), 
-				TaskEndCallBack(_TaskEndCallBack), 
-				_JobIsDone(false) {};
-		
+			const std::function<RetType(void)> &_Task,
+			const std::function<void(const RetType&)>& _TaskEndCallBack = nullptr) :
+			Task(_Task),
+			TaskEndCallBack(_TaskEndCallBack) {
+			_JobIsDone = false;
+			_JobFaild = false;
+		};
+
 		Job(
 			std::function<RetType(void)> && _Task,
 			std::function<void(const RetType&)>&& _TaskEndCallBack = nullptr) :
-				Task(std::move(_Task)), 
-				TaskEndCallBack(std::move(_TaskEndCallBack)), 
-				_JobIsDone(false) {};
-		
+			Task(std::move(_Task)),
+			TaskEndCallBack(std::move(_TaskEndCallBack)) {
+			_JobIsDone = false;
+			_JobFaild = false;
+		};
+
 		//can not be copied
 		Job(const Job&) = delete;
 
 		//move constructor
-		Job(Job&& J) : 
+		Job(Job&& J) :
 			Task(std::move(J.Task)),
 			TaskEndCallBack(std::move(J.TaskEndCallBack)),
-			_JobIsDone(J._JobIsDone) {};
-		
+			_JobIsDone(J._JobIsDone),
+			_JobFaild(J._JobFaild) {};
+
 		//can not be copied
 		Job& operator=(const Job&) = delete;
-		
+
 		//move assignment operator
 		Job& operator=(Job&& J){
 			Task = std::move(J.Task);
 			TaskEndCallBack = std::move(J.TaskEndCallBack);
-			_JobIsDone(J._JobIsDone);
+			_JobIsDone = J._JobIsDone;
+			_JobFaild = J._JobFaild;
 			return *this;
 		}
 	private:
-		friend class JobsExecuter<RetType>;
-		//only JobsExecuter will operate this fields
-		bool _JobIsDone;
+		friend class JobExecuter<RetType>;
+		//only JobExecuter will operate this fields
+		std::atomic_bool  _JobIsDone;
+		std::atomic_bool  _JobFaild;
 		RetType _result;
 	};
 
@@ -71,30 +84,30 @@ namespace jobs{
 	struct Jobs{
 		std::vector< Job<RetType> > Tasks;//list of jobs to be done
 		std::function<void(void)> TasksEndCallBack;//will be called after all jobs are done
-		
+
 		Jobs() {};
 
 		//can not be copied
 		Jobs(const std::vector< Job<RetType> > &_Tasks, const std::function<void(const RetType&)>& _TasksEndCallBack = nullptr) = delete;
-		
+
 		Jobs(
-			std::vector< Job<RetType> >&& _Tasks, 
+			std::vector< Job<RetType> >&& _Tasks,
 			std::function<void(const RetType&)>&& _TasksEndCallBack = nullptr) :
-				Tasks(std::move(_Tasks)), 
-				TasksEndCallBack(std::move(_TasksEndCallBack)) {};
-		
+			Tasks(std::move(_Tasks)),
+			TasksEndCallBack(std::move(_TasksEndCallBack)) {};
+
 		//can not be copied
 		Jobs(const Jobs&) = delete;
 
 		//move constructor
-		Jobs(Jobs&& J) : 
+		Jobs(Jobs&& J) :
 			Tasks(std::move(J.Tasks)),
 			TasksEndCallBack(std::move(J.TasksEndCallBack)),
 			_JobsAreDone(std::move(J._JobsAreDone)) {};
-		
+
 		//can not be copied
 		Jobs& operator=(const Jobs&) = delete;
-		
+
 		//move assignment operator
 		Jobs& operator=(Jobs&& J){
 			Tasks = std::move(J.Tasks);
@@ -102,31 +115,47 @@ namespace jobs{
 			_JobsAreDone(J._JobsAreDone);
 			return *this;
 		}
-		
+
 	private:
 		friend class JobsExecuter<RetType>;
 		//only JobsExecuter will operate this field
-		
+
 		//std::vector<bool> JobsAreDone;
 		//there is some problems with vector<bool> in STL
 		std::vector<char> _JobsAreDone;
-		
+
 	};
 
-	
+}; //namespace jobs
+
+	extern std::mutex m;
+
+namespace jobs {
+	template <typename T>
+	void out(T s) {
+		std::lock_guard<std::mutex> tmp(m);
+		std::cout << s << std::endl;
+	}
+
 	template<typename RetType>
 	class JobExecuter {
 	public:
 		//just creating working thread
-		JobExecuter(): _JobIsCome(false) {
+		JobExecuter() : _mtxThreadJob() {
+			_synchronizeBOOL = false;
+			_ThreadShouldClose = false;
+			_JobHasCome = false;
 			_WorkingThread = std::thread(JobExecuter<RetType>::JobThreadProcessor, this);
+			while (!_synchronizeBOOL) {
+				std::this_thread::yield();
+			}
 		};
 
 		//can not be copied
 		JobExecuter(const JobExecuter&) = delete;
 
 		//move constructor
-		JobExecuter(JobExecuter&& moveJob) { 
+		JobExecuter(JobExecuter&& moveJob) {
 			*this = std::move(moveJob);
 		};
 
@@ -134,17 +163,17 @@ namespace jobs{
 		JobExecuter& operator=(const JobExecuter&) = delete;
 
 		//move assigment operator
-		JobExecuter& operator=(JobExecuter&& moveJob) {
-			_JobIsCome = std::move(moveJob._JobIsCome);
-			_mtxThreadJob = std::move(moveJob._mtxThreadJob);
-			_CVmtxThreadJob = std::move(moveJob._CVmtxThreadJob);
-			_mtxInterfaceJob = std::move(moveJob._mtxInterfaceJob);
-			_CVmtxInterfaceJob = std::move(moveJob._CVmtxInterfaceJob);
-			_CurrentJob = std::move(moveJob._CurrentJob);
-			_WorkingThread = std::move(moveJob._WorkingThread);
+		JobExecuter& operator=(JobExecuter&& moveJobExecuter) {
+			_CVmtxThreadJob = std::move(moveJobExecuter._CVmtxThreadJob);
+			_JobHasCome = std::move(moveJobExecuter._JobHasCome);
+			_uLckThreadJob = std::move(moveJobExecuter._uLckThreadJob);
+			_CurrentJob = std::move(moveJobExecuter._CurrentJob);
+			_ThreadShouldClose = std::move(moveJobExecuter._ThreadShouldClose);
+			_WorkingThread = std::move(moveJobExecuter._WorkingThread);
 		};
 
-		//creating working thread and start executing newJob
+		//creating working thread and 
+		//wait for starting of executing newJob
 		JobExecuter(Job<RetType>&& newJob): JobExecuter() {
 			AddJob(std::move(newJob));
 		};
@@ -154,27 +183,38 @@ namespace jobs{
 		~JobExecuter() {
 			WaitForJobDone();
 			_ThreadShouldClose = true;
-			_JobIsCome = true;
+			_JobHasCome = true;
 			_CVmtxThreadJob.notify_all();
 			_WorkingThread.join();
 		};
 
 		//waiting until previous job will be done
 		//and than start execute newJob (not waiting for it to be done)
-		void AddJob(Jobs<RetType>&& newJobs);
+		void AddJob(Job<RetType>&& newJob){
+			WaitForJobDone();
+			_CurrentJob = std::move(newJob);
+			_CurrentJob._JobIsDone = false;
+
+			_synchronizeBOOL = false;
+			_JobHasCome = true;
+			_CVmtxThreadJob.notify_all();
+			while (!_synchronizeBOOL) {
+				std::this_thread::yield();
+			}
+		};
 
 		//waiting until job will be done
 		void WaitForJobDone() const {
-			if(!JobIsDone()) {
+			if (!JobIsDone()) {
 				//like wait until unlock
-				_uLckThreadJob.lock();
-				_uLckThreadJob.unlock();
+				_uLckThreadJob.mutex()->lock();
+				_uLckThreadJob.mutex()->unlock();
 			}
 		};
 
 		//true it job is done
 		bool JobIsDone() const {
-			return !bool(_uLckThreadJob);
+			return _CurrentJob._JobIsDone;
 		};
 
 		//if job is not done jet, waiting until it be done 
@@ -184,33 +224,62 @@ namespace jobs{
 			return _CurrentJob._result;
 		};
 		
+
 	private:	
-		std::atomic_bool _JobIsCome;
-		std::unique_lock<std::mutex> _uLckThreadJob;
-		std::mutex _mtxThreadJob;
+		//to synchronize thread and other functions
 		std::condition_variable _CVmtxThreadJob;
 
-		//std::mutex _mtxInterfaceJob;
-		//std::condition_variable _CVmtxInterfaceJob;
+		//obviously
+		std::atomic_bool _JobHasCome;
 
+		//for std::condition_variable _CVmtxThreadJob
+		mutable std::unique_lock<std::mutex> _uLckThreadJob;
+		
+		//for std::unique_lock<std::mutex> _uLckThreadJob
+		std::mutex _mtxThreadJob;
+
+		//the essence =)
 		Job<RetType> _CurrentJob;
+
+		//true when object's death is coming...
 		std::atomic_bool _ThreadShouldClose;
+
+		//thread, where Job will be executed
 		std::thread _WorkingThread;
 		
-		
-		static void JobThreadProcessor(JobExecuter<RetType>* parent) {
-			std::unique_lock<std::mutex> mtxLock(parent->_mtxThreadJob);
-			while(true){
-				while(!_JobIsCome) {
-					_CVmtxThreadJob.wait(std::unique_lock(_mtxThreadJob));
-				}
-				if (_ThreadShouldClose) {
+		//some synchronize staff
+		std::atomic_bool _synchronizeBOOL;
+
+		static void JobThreadProcessor(JobExecuter<RetType>* parent){
+			parent->_uLckThreadJob = std::unique_lock<std::mutex>(parent->_mtxThreadJob);
+			parent->_synchronizeBOOL = true;
+			//and now thread started
+			while(true) {
+				parent->_CVmtxThreadJob.wait(parent->_uLckThreadJob, [&](){ return parent->_JobHasCome; });
+				parent->_synchronizeBOOL = true;
+				if (parent->_ThreadShouldClose) {
+					parent->_uLckThreadJob.release()->unlock();
 					return;
+				}
+				try {
+					parent->_CurrentJob._result = parent->_CurrentJob.Task();
+					parent->_JobHasCome = false;
+					try {
+						if (parent->_CurrentJob.TaskEndCallBack) {
+							parent->_CurrentJob.TaskEndCallBack(parent->_CurrentJob._result);
+						}
+					}
+					catch (...) {
+
+					}
+					parent->_CurrentJob._JobIsDone = true;
+				}
+				catch (...) {
+					parent->_CurrentJob._JobIsDone = false;
+					parent->_CurrentJob._JobFaild = true;
 				}
 			}
 		}
-		
-		
 	};
 
 	template<typename RetType>
