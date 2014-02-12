@@ -6,6 +6,7 @@
 #include <thread>
 #include <condition_variable>
 #include <functional>
+#include <atomic>
 
 namespace jobs{
 
@@ -23,14 +24,14 @@ namespace jobs{
 		//TaskEndCallBack - will be called, after task is done, with parameter returned by Task
 		std::function<void(const RetType&)> TaskEndCallBack;
 
-		Job() : JobIsDone(false) {};
+		Job() : _JobIsDone(false) {};
 
 		Job(
 			const std::function<RetType(void)> &_Task, 
 			const std::function<void(const RetType&)>& _TaskEndCallBack = nullptr) : 
 				Task(_Task), 
 				TaskEndCallBack(_TaskEndCallBack), 
-				JobIsDone(false) {};
+				_JobIsDone(false) {};
 		
 		Job(
 			std::function<RetType(void)> && _Task,
@@ -112,68 +113,110 @@ namespace jobs{
 		
 	};
 
+	
 	template<typename RetType>
-	//performing single gob execution in paralel thread
-	//thread's lifetime is the same as class JobExecuter's object lifetime
 	class JobExecuter {
+	public:
 		//just creating working thread
-		JobExecuter();
+		JobExecuter(): _JobIsCome(false) {
+			_WorkingThread = std::thread(JobExecuter<RetType>::JobThreadProcessor, this);
+		};
 
 		//can not be copied
 		JobExecuter(const JobExecuter&) = delete;
 
 		//move constructor
-		JobExecuter(JobExecuter&&);
+		JobExecuter(JobExecuter&& moveJob) { 
+			*this = std::move(moveJob);
+		};
 
 		//can not be copied
 		JobExecuter& operator=(const JobExecuter&) = delete;
 
 		//move assigment operator
-		JobExecuter& operator=(JobExecuter&&);
+		JobExecuter& operator=(JobExecuter&& moveJob) {
+			_JobIsCome = std::move(moveJob._JobIsCome);
+			_mtxThreadJob = std::move(moveJob._mtxThreadJob);
+			_CVmtxThreadJob = std::move(moveJob._CVmtxThreadJob);
+			_mtxInterfaceJob = std::move(moveJob._mtxInterfaceJob);
+			_CVmtxInterfaceJob = std::move(moveJob._CVmtxInterfaceJob);
+			_CurrentJob = std::move(moveJob._CurrentJob);
+			_WorkingThread = std::move(moveJob._WorkingThread);
+		};
 
 		//creating working thread and start executing newJob
-		JobExecuter(Job<RetType>&& newJob);
+		JobExecuter(Job<RetType>&& newJob): JobExecuter() {
+			AddJob(std::move(newJob));
+		};
 
 		//waiting for job to be done
 		//and closing working thread
-		~JobExecuter();
+		~JobExecuter() {
+			WaitForJobDone();
+			_ThreadShouldClose = true;
+			_JobIsCome = true;
+			_CVmtxThreadJob.notify_all();
+			_WorkingThread.join();
+		};
 
 		//waiting until previous job will be done
 		//and than start execute newJob (not waiting for it to be done)
 		void AddJob(Jobs<RetType>&& newJobs);
 
-		//true if the job not executed yet
-		bool JobIsExecuting() const;
-
 		//waiting until job will be done
-		void WaitForJobDone() const;
+		void WaitForJobDone() const {
+			if(!JobIsDone()) {
+				//like wait until unlock
+				_uLckThreadJob.lock();
+				_uLckThreadJob.unlock();
+			}
+		};
 
 		//true it job is done
-		bool JobIsDone() const;
+		bool JobIsDone() const {
+			return !bool(_uLckThreadJob);
+		};
 
 		//if job is not done jet, waiting until it be done 
 		//than return result of the job 
-		RetType JobResult() const;
-	private:
-		// the function running in other thread
-		static void _ThreadProcessor(JobExecuter& _this);
-
+		RetType JobResult() const{
+			WaitForJobDone();
+			return _CurrentJob._result;
+		};
+		
+	private:	
+		std::atomic_bool _JobIsCome;
+		std::unique_lock<std::mutex> _uLckThreadJob;
 		std::mutex _mtxThreadJob;
 		std::condition_variable _CVmtxThreadJob;
 
-		std::mutex _mtxInterfaceJob;
-		std::condition_variable _CVmtxInterfaceJob;
+		//std::mutex _mtxInterfaceJob;
+		//std::condition_variable _CVmtxInterfaceJob;
 
 		Job<RetType> _CurrentJob;
+		std::atomic_bool _ThreadShouldClose;
 		std::thread _WorkingThread;
+		
+		
+		static void JobThreadProcessor(JobExecuter<RetType>* parent) {
+			std::unique_lock<std::mutex> mtxLock(parent->_mtxThreadJob);
+			while(true){
+				while(!_JobIsCome) {
+					_CVmtxThreadJob.wait(std::unique_lock(_mtxThreadJob));
+				}
+				if (_ThreadShouldClose) {
+					return;
+				}
+			}
+		}
+		
 		
 	};
 
 	template<typename RetType>
 	//Performing executing of jobs
 	//Using pool thread model to execute jobs concurrency
-	class JobsExecuter
-	{
+	class JobsExecuter {
 	public:
 		//just creating JobExecutors and wait for jobs
 		JobsExecuter();
@@ -216,6 +259,5 @@ namespace jobs{
 	};//class JobsExecuter
 
 };//namespace jobs
-
 
 #endif //JOBEXECUTER_H

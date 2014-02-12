@@ -7,3 +7,6 @@ binWin32/
 FilesInfoAndChecksum/x64/
 FilesInfoAndChecksum/Debug/
 *.suo
+*.o
+*.obj
+*.exe

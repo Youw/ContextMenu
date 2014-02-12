@@ -1,5 +1,6 @@
 #include "CheckSumCalculator.h"
 
+#include <iostream>
 #include <fstream>
 #include <stdexcept>
 
