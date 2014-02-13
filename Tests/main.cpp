@@ -6,6 +6,12 @@
 #include <chrono>
 #include "../src/JobsExecuting.h"
 std::mutex m;
+template<typename T>
+static void out(const T& s) {
+//	m.lock();
+	std::cout << s << std::endl;
+//	m.unlock();
+}
 
 class myjob {
 public:
@@ -15,31 +21,39 @@ public:
 		this->s = s;
 	}
 	int operator() () {
+//	std::this_thread::sleep_for(std::chrono::seconds(1));
 		m.lock();
+
+//		std::this_thread::sleep_for(std::chrono::seconds(1));
 		std::cout << s << std::endl;
-		std::this_thread::sleep_for(std::chrono::seconds(1));
+		
+		
 		m.unlock();
 		return s.length();
 	}
 };
 
 int main() {
-	std::string s1[] = { "a", "bb", "ccc", "dddd" };
+	std::string s1[] = {"a", "bb"  , "ccc", "dddd", "eeeee", "ffffff" };
 	using std::endl;
 	using std::cout;
-	jobs::Jobs<int> jobsTodo;
-	jobs::JobExecuter<int> j1;
+	std::vector<jobs::Job<int>> jobsTodo;
 	for (auto &i : s1){
-		jobsTodo.Tasks.push_back(jobs::Job<int>(myjob(i)));
-		j1.AddJob(jobs::Job<int>(myjob(i)));
-		int res = j1.JobResult();
-		m.lock();
-		cout << res << endl;
-		m.unlock();
+		jobsTodo.push_back(jobs::Job<int>(myjob(i)));
+//		j1.AddJob(jobs::Job<int>(myjob(i)));
+//		int res = j1.JobResult();
+//		m.lock();
+//		cout << res << endl;
+//		m.unlock();
+	}
+	jobs::JobsExecuter<int> J(std::move(jobsTodo));
+
+	//std::this_thread::sleep_for(std::chrono::seconds(4));
+
+	for (int i = 0; i < J.JobsCount(); i++){
+		out(J[i]);
 	}
 
-	size_t jobsCount = 3;
-
-	system("pause");
+//	system("pause");
 	return 0;
 }
