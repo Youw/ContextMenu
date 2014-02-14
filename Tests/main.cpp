@@ -33,7 +33,14 @@ public:
 	}
 };
 
+#include<Windows.h>
+
 int main() {
+	std::wstring a = L"п–и¬≥“ hELlo";
+	std::wstring b = L"прив≥т hello";
+
+	std::locale l("");
+	std::cout << l.name() << std::endl;
 	std::string s1[] = {"a", "bb"  , "ccc", "dddd", "eeeee", "ffffff" };
 	using std::endl;
 	using std::cout;
@@ -50,10 +57,10 @@ int main() {
 
 	//std::this_thread::sleep_for(std::chrono::seconds(4));
 
-	for (int i = 0; i < J.JobsCount(); i++){
+	for (unsigned i = 0; i < J.JobsCount(); i++){
 		out(J[i]);
 	}
 
-//	system("pause");
+	system("pause");
 	return 0;
 }

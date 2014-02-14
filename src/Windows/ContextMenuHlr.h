@@ -11,6 +11,13 @@ The code creating a Shell context menu handler with C++.
 
 namespace FileInfoAndChecksum {
 
+	struct StrCompare {
+		bool operator() (const std::wstring&a, const std::wstring&b) const {
+			return CompareStringEx(NULL, NORM_IGNORECASE | NORM_IGNOREWIDTH,
+				a.c_str(), (int)a.length(), b.c_str(), (int)b.length(), NULL, NULL, 0) < 2;
+		}
+	};
+	
 	//  "Files info and checksum" context menu handler
 	class ContextMenuHlr : public IShellExtInit, public IContextMenu
 	{
@@ -40,10 +47,10 @@ namespace FileInfoAndChecksum {
 		std::wstring m_FirstFile;
 
 		// The list of the names of selected files.
-		std::set<std::wstring> m_SelectedFiles;
+		std::set<std::wstring, StrCompare> m_SelectedFiles;
 
 		// The list of the names of selected directories.
-		std::set<std::wstring> m_SelectedDirectories;
+		std::set<std::wstring, StrCompare> m_SelectedDirectories;
 
 		// The method that handles the "display" verb.
 		void OnMakeLogOfChecksums(HWND hWnd);

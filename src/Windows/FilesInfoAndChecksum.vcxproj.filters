@@ -38,9 +38,6 @@
     <ClCompile Include="..\CheckSumCalculator.cpp">
       <Filter>CrossPlatform\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\MainLogic.cpp">
-      <Filter>CrossPlatform\Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ClassFactory.h">

@@ -5,11 +5,11 @@
 #include<limits.h>
 
 //need cross platform DWORD
-#if (USHRT_MAX==4294967295)
+#if (USHRT_MAX==0xffffffff)
 #define Uint32t unsigned short
-#elif (UINT_MAX==4294967295)
+#elif (UINT_MAX==0xffffffff)
 #define Uint32t unsigned int
-#elif (ULONG_MAX==4294967295)
+#elif (ULONG_MAX==0xffffffff)
 #define Uint32t unsigned long
 #endif
 

@@ -33,7 +33,9 @@ namespace FileInfoAndChecksum {
 		m_pszVerbCanonicalName(VerbCanonicalName_CalcChecksum),
 		m_pwszVerbCanonicalName(MAKEWIDE(VerbCanonicalName_CalcChecksum)),
 		m_pszVerbHelpText(VerbHelpText_CalcChecksum),
-		m_pwszVerbHelpText(MAKEWIDE(VerbHelpText_CalcChecksum))
+		m_pwszVerbHelpText(MAKEWIDE(VerbHelpText_CalcChecksum)),
+		m_SelectedFiles(StrCompare()),
+		m_SelectedDirectories(StrCompare())
 	{
 		InterlockedIncrement(&g_cDllRef);
 

@@ -6,55 +6,61 @@
 #include <iostream>
 #include <fstream>
 #include <boost/filesystem.hpp>
-#include "boost/date_time/posix_time/posix_time.hpp"
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <chrono>
+#include <locale>
 
-static bool m_WriteInfoToLog(std::set<std::wstring> &Files, const std::wstring &LogFileName){
+template<typename T>
+//T must be STL container or array of std::wstring
+static bool m_WriteInfoToLog(T&& Files, const std::wstring &LogFileName){
 	using std::endl;
-	jobs::Jobs<CHECKSUM_DWORD> jobsTodo;
+	std::wofstream LogFile;
+	LogFile.imbue(std::locale(""));
+
+	size_t filesCount = Files.size();
+
+	std::vector<jobs::Job<CHECKSUM_DWORD>> jobsTodo;
 	for (auto &f : Files){
-		jobsTodo.Tasks.push_back(jobs::Job<CHECKSUM_DWORD>(CheckSumCalculator(std::move(const_cast<std::wstring &>(f)))));
+		jobsTodo.push_back(jobs::Job<CHECKSUM_DWORD>(CheckSumCalculator(std::move(const_cast<std::wstring &>(f)))));
 	}
 	Files.clear();
 	//start of the log
 	{
-		std::wofstream LogFile(LogFileName, std::ios::app);
+		LogFile.open(LogFileName, std::ios::app);
 		if (LogFile) {
 			auto&& now = boost::posix_time::second_clock::local_time();
-			LogFile << endl << "  <<<< Log created at: " << now << " >>>>" << endl << endl;
+			LogFile << endl << "  <<<< Log created at: " << now << " >>>>" << endl << "Selected " << filesCount << " file(s)." << endl << endl;
+			LogFile.close();
 		}
 		else {
 			return false;
 		}
 	}
 
-	jobs::JobsExecuter<CHECKSUM_DWORD> myJobs(jobsTodo);
-
+	jobs::JobsExecuter<CHECKSUM_DWORD> myJobs(std::move(jobsTodo));
+	
 	size_t jobsCount = myJobs.JobsCount();
 
 	for (size_t i = 0; i < jobsCount; i++) {
-		std::wofstream LogFile(LogFileName, std::ios::app);
+		LogFile.open(LogFileName, std::ios::app);
 		LogFile << "The checksum of \"" << myJobs.GetJob(i).Task.target<CheckSumCalculator>()->GetFileName() << "\" = " << myJobs[i] << endl;
+		LogFile.close();
 	}
 
 	//end of the log
 	{
-		std::wofstream LogFile(LogFileName, std::ios::app);
-		if (LogFile) {
-			auto&& now = boost::posix_time::second_clock::local_time();
-			LogFile << endl << "  <<<< End build log at: " << now << " >>>>" << endl;
-
-		}
-		else {
-			return false;
-		}
+		LogFile.open(LogFileName, std::ios::app);
+		auto&& now = boost::posix_time::second_clock::local_time();
+		LogFile << endl << "  <<<< End build log at: " << now << " >>>>" << endl;
+		LogFile.close();
 	}
 
 	return true;
 }
 
-
-bool WriteInfoToLog(std::set<std::wstring> &Files, const std::wstring &LogFileName, const bool async){
+template<typename T>
+//T must be STL container or array of std::wstring
+bool WriteInfoToLog(T&& Files, const std::wstring &LogFileName, const bool async){
 	if (async) {
 		//i think it has a bag
 		//TODO: fix it later
