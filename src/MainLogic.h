@@ -30,9 +30,9 @@ static bool m_WriteInfoToLog(T&& Files, const std::wstring &LogFileName){
 
 	size_t filesCount = Files.size();
 
-	std::vector<jobs::Job<CHECKSUM_DWORD>> jobsTodo;
+	std::vector<jobs::Job<uint32_t>> jobsTodo;
 	for (auto &f : Files){
-		jobsTodo.push_back(jobs::Job<CHECKSUM_DWORD>(CheckSumCalculator(std::move(const_cast<std::wstring &>(f)))));
+		jobsTodo.push_back(jobs::Job<uint32_t>(CheckSumCalculator(std::move(const_cast<std::wstring &>(f)))));
 	}
 	Files.clear();
 	//start of the log
@@ -48,7 +48,7 @@ static bool m_WriteInfoToLog(T&& Files, const std::wstring &LogFileName){
 		}
 	}
 
-	jobs::JobsExecuter<CHECKSUM_DWORD> myJobs(std::move(jobsTodo));
+	jobs::JobsExecuter<uint32_t> myJobs(std::move(jobsTodo));
 
 	size_t jobsCount = myJobs.JobsCount();
 
@@ -68,7 +68,7 @@ static bool m_WriteInfoToLog(T&& Files, const std::wstring &LogFileName){
 //		static const unsigned long s_Tbyte = s_Gbyte * 1024;		//  O_0, mb some oracle db? =)
 
 		LogFile.open(LogFileName, std::ios::app);
-		CHECKSUM_DWORD checksum = myJobs[i];
+		uint32_t checksum = myJobs[i];
 		path PathName(myJobs.GetJob(i).Task.target<CheckSumCalculator>()->GetFileName());
 		if (is_regular_file(PathName)) {
 			//i haven't discover fine cross platform solution for getting

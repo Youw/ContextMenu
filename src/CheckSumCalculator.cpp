@@ -11,8 +11,8 @@ CheckSumCalculator::CheckSumCalculator(const std::wstring& FileName):m_FileName(
 CheckSumCalculator::CheckSumCalculator(std::wstring&& FileName):m_FileName(std::move(FileName)) {
 }
 
-CHECKSUM_DWORD  CheckSumCalculator::operator() () {
-	CHECKSUM_DWORD sum = 0;
+uint32_t  CheckSumCalculator::operator() () {
+	uint32_t sum = 0;
 	char spoon[4096];
 
 	std::ifstream temp(m_FileName, std::ios::binary);
@@ -21,13 +21,13 @@ CHECKSUM_DWORD  CheckSumCalculator::operator() () {
 	temp.read(spoon, 4096);
 	while (!temp.eof()) {
 		for (auto&i:spoon)
-			sum += CHECKSUM_DWORD(i);
+			sum += uint32_t(i);
 		temp.read(spoon, 4096);
 	}
 	if (temp.bad()) throw std::runtime_error("Error occured while reading file");
 	long long readed = temp.gcount();
 	for (int i = 0; i < readed; i++) {
-		sum += CHECKSUM_DWORD(spoon[i]);
+		sum += uint32_t(spoon[i]);
 	}
 	temp.close();
 	return (sum);
