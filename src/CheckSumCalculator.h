@@ -3,17 +3,7 @@
 
 #include<string>
 #include<limits.h>
-
-//need cross platform DWORD
-#if (USHRT_MAX==0xffffffff)
-#define Uint32t unsigned short
-#elif (UINT_MAX==0xffffffff)
-#define Uint32t unsigned int
-#elif (ULONG_MAX==0xffffffff)
-#define Uint32t unsigned long
-#endif
-
-#define CHECKSUM_DWORD Uint32t
+#include<cstdint>
 
 //calculates a per-byte sum (a flavour of checksum) in 4 bytes variable
 class CheckSumCalculator
@@ -23,7 +13,7 @@ public:
 	CheckSumCalculator(std::wstring&& FileName);
 
 	//return checksum of initialised filename or throw exception if error
-	CHECKSUM_DWORD operator() ();
+	uint32_t operator() ();
 
 	void SetFileName(const std::wstring& FileName);
 	void SetFileName(std::wstring&& FileName);
